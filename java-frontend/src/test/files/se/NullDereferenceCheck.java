@@ -645,6 +645,12 @@ class NullPointerTest {
     }
     return result;
   }
+
+  private void bar(@Nullable Object value) {
+    A.foo(value, value != null ? "A" : null); // Compliant
+  }
+
+  static void foo(Object o1, Object o2) {  }
 }
 
 class MyClass {

@@ -366,9 +366,11 @@ public class ExplodedGraphWalker {
   private void handleBranch(CFG.Block programPosition, Tree condition, boolean checkPath) {
     Pair<List<ProgramState>, List<ProgramState>> pair = constraintManager.assumeDual(programState);
     ExplodedGraph.ProgramPoint falseBlockProgramPoint = new ExplodedGraph.ProgramPoint(programPosition.falseBlock(), 0);
+    // for conditional expressions the states have already been calculated when assuming dual, no need to stack the TRUE/FALSE value
+    boolean condtionFromConditionalExpression = condition.parent().is(Tree.Kind.CONDITIONAL_EXPRESSION);
     for (ProgramState state : pair.a) {
       // enqueue false-branch, if feasible
-      ProgramState ps = state.stackValue(SymbolicValue.FALSE_LITERAL);
+      ProgramState ps = condtionFromConditionalExpression ? state : state.stackValue(SymbolicValue.FALSE_LITERAL);
       enqueue(falseBlockProgramPoint, ps, node.exitPath);
       if (checkPath) {
         alwaysTrueOrFalseChecker.evaluatedToFalse(condition);
@@ -376,7 +378,7 @@ public class ExplodedGraphWalker {
     }
     ExplodedGraph.ProgramPoint trueBlockProgramPoint = new ExplodedGraph.ProgramPoint(programPosition.trueBlock(), 0);
     for (ProgramState state : pair.b) {
-      ProgramState ps = state.stackValue(SymbolicValue.TRUE_LITERAL);
+      ProgramState ps = condtionFromConditionalExpression ? state : state.stackValue(SymbolicValue.TRUE_LITERAL);
       // enqueue true-branch, if feasible
       enqueue(trueBlockProgramPoint, ps, node.exitPath);
       if (checkPath) {
